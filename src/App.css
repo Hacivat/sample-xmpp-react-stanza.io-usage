@@ -30,3 +30,22 @@
     transform: rotate(360deg);
   }
 }
+
+.input {
+  width: 200px;
+  margin: 0 8px 8px 0
+}
+
+.right-button-style {
+  float: right;
+}
+
+.left-button-style {
+  float: left;
+}
+
+.box {
+  display: grid;
+  grid-template-columns: 200px 200px 200px;
+  padding: 10px;
+}

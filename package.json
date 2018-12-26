@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "antd": "^3.11.2",
+    "express": "^4.16.4",
+    "mysql": "^2.16.0",
     "react": "^16.7.0",
+    "react-chat-elements": "https://github.com/Detaysoft/react-chat-elements.git",
     "react-dom": "^16.7.0",
-    "react-scripts": "2.1.1"
+    "react-scripts": "2.1.1",
+    "stanza.io": "^9.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
