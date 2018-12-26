@@ -18,8 +18,12 @@ class Chat extends Component {
       passVal: "",
       messageVal: "",
       logged: false,
-      roster: [],
-      domain: "@example.com"
+      roster: [
+        {
+          jid: "",
+          status: "unavailable"
+        }
+      ]
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleLoginClick = this.handleLoginClick.bind(this);
@@ -34,18 +38,18 @@ class Chat extends Component {
     window.addEventListener("beforeunload", this.unload);
   }
   unload(event) {
-    if(this.state.logged) {
+    if (this.state.logged) {
       this.client.disconnect();
       this.setState({
         logged: false
-      })
+      });
     }
   }
 
   handleLoginClick(event) {
     event.preventDefault();
     this.client = XMPP.createClient({
-      jid: this.state.unameVal + this.state.domain,
+      jid: this.state.unameVal + "@example.com",
       password: this.state.passVal,
       transport: "bosh",
       boshURL: "http://127.0.0.1:7070/http-bind",
@@ -53,12 +57,26 @@ class Chat extends Component {
       resource: "web"
     });
 
+    this.client.on("presence", presence => {
+      let currentRoster = this.state.roster;
+      const precenceFromJID = presence.from.bare;
+      const precenceFromType = presence.type;
+      const index = this.state.roster.findIndex(x => x.jid === precenceFromJID);
+      currentRoster[index].status = precenceFromType;
+      this.setState({
+        roster: currentRoster
+      });
+    });
+
     this.client.on("session:started", () => {
       this.client.getRoster((err, res) => {
         if (res) {
           let roster = [];
           for (let i = 0; i < res.roster.items.length; i++) {
-            roster.push(res.roster.items[i].jid.local);
+            roster.push({
+              jid: res.roster.items[i].jid.full,
+              status: "unavailable"
+            });
           }
           this.setState({
             roster: roster
@@ -75,12 +93,15 @@ class Chat extends Component {
       });
     });
     this.client.on("disconnected", () => {
-      console.log("disconnnected");
+      console.log("disconnected");
     });
     this.client.connect();
   }
   handleSendClick(event) {
     event.preventDefault();
+    this.client.sendMessage({
+
+    });
   }
 
   handleDisconnectClick(event) {
