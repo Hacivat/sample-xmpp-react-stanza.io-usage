@@ -25,6 +25,21 @@ class Chat extends Component {
     this.handleLoginClick = this.handleLoginClick.bind(this);
     this.handleSendClick = this.handleSendClick.bind(this);
     this.handleDisconnectClick = this.handleDisconnectClick.bind(this);
+    this.unload = this.unload.bind(this);
+  }
+  componentDidMount() {
+    window.addEventListener("beforeunload", this.unload);
+  }
+  componentWillMount() {
+    window.addEventListener("beforeunload", this.unload);
+  }
+  unload(event) {
+    if(this.state.logged) {
+      this.client.disconnect();
+      this.setState({
+        logged: false
+      })
+    }
   }
 
   handleLoginClick(event) {
@@ -41,15 +56,14 @@ class Chat extends Component {
     this.client.on("session:started", () => {
       this.client.getRoster((err, res) => {
         if (res) {
-          let roster = []
+          let roster = [];
           for (let i = 0; i < res.roster.items.length; i++) {
             roster.push(res.roster.items[i].jid.local);
           }
           this.setState({
             roster: roster
-          })
+          });
           roster = [];
-          console.log(this.state.roster);
         }
         if (err) {
           console.log(err);
@@ -77,7 +91,7 @@ class Chat extends Component {
       roster: []
     });
   }
-  
+
   handleChange(param, type) {
     switch (type) {
       case "uname":
