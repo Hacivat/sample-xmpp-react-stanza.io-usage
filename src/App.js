@@ -18,10 +18,11 @@ class Chat extends Component {
       passVal: "",
       messageVal: "",
       logged: false,
+      selectedUser: "",
       roster: [
         {
           jid: "",
-          status: "unavailable"
+          status: false
         }
       ]
     };
@@ -29,6 +30,7 @@ class Chat extends Component {
     this.handleLoginClick = this.handleLoginClick.bind(this);
     this.handleSendClick = this.handleSendClick.bind(this);
     this.handleDisconnectClick = this.handleDisconnectClick.bind(this);
+    this.handleSelectUserClick = this.handleSelectUserClick.bind(this);
     this.unload = this.unload.bind(this);
   }
   componentDidMount() {
@@ -59,10 +61,14 @@ class Chat extends Component {
 
     this.client.on("presence", presence => {
       let currentRoster = this.state.roster;
-      const precenceFromJID = presence.from.bare;
+      const precenceFromJID = presence.from.local;
       const precenceFromType = presence.type;
       const index = this.state.roster.findIndex(x => x.jid === precenceFromJID);
-      currentRoster[index].status = precenceFromType;
+      if (precenceFromType === "available") {
+        currentRoster[index].status = true;
+      } else {
+        currentRoster[index].status = false;
+      }
       this.setState({
         roster: currentRoster
       });
@@ -74,8 +80,8 @@ class Chat extends Component {
           let roster = [];
           for (let i = 0; i < res.roster.items.length; i++) {
             roster.push({
-              jid: res.roster.items[i].jid.full,
-              status: "unavailable"
+              jid: res.roster.items[i].jid.local,
+              status: false
             });
           }
           this.setState({
@@ -95,12 +101,17 @@ class Chat extends Component {
     this.client.on("disconnected", () => {
       console.log("disconnected");
     });
+    this.client.on("message", message => {
+      console.log(message.from.local);
+    });
+
     this.client.connect();
   }
   handleSendClick(event) {
     event.preventDefault();
     this.client.sendMessage({
-
+      to: this.state.selectedUser + "@example.com",
+      body: this.state.messageVal
     });
   }
 
@@ -133,6 +144,12 @@ class Chat extends Component {
       default:
     }
   }
+  handleSelectUserClick(event) {
+    event.preventDefault();
+    this.setState({
+      selectedUser: event.target.value
+    });
+  }
   render() {
     const inputStyle = {
       width: "200px",
@@ -141,9 +158,6 @@ class Chat extends Component {
     };
     const rightButtonStyle = {
       float: "right"
-    };
-    const leftButtonStyle = {
-      float: "left"
     };
     const boxStyle = {
       width: "200px",
@@ -155,9 +169,7 @@ class Chat extends Component {
       right: "0",
       margin: "auto"
     };
-    const userListStyle = {
-      float: "left"
-    };
+
     const login = (
       <div style={boxStyle}>
         <Input
@@ -185,34 +197,47 @@ class Chat extends Component {
     );
 
     const chat = (
-      <div style={boxStyle}>
-        <div style={userListStyle}>
-          <ul />
+      <div className="grid-container">
+        <div className="item1">
+          <ul>
+            {this.state.roster.map(item => {
+              return (
+                <li key={item.jid}>
+                  <Button
+                    type={item.status ? "primary" : ""}
+                    onClick={event => this.handleSelectUserClick(event)}
+                    value={item.jid}
+                  >
+                    {item.jid}
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-
-        <Input
-          style={inputStyle}
-          placeholder="Some words..."
-          value={this.state.messageVal}
-          onChange={event => this.handleChange(event, "message")}
-        />
-        <br />
-
-        <Button
-          type="primary"
-          style={leftButtonStyle}
-          onClick={event => this.handleDisconnectClick(event)}
-        >
-          Disconnect
-        </Button>
-
-        <Button
-          type="primary"
-          style={rightButtonStyle}
-          onClick={event => this.handleSendClick(event)}
-        >
-          Send
-        </Button>
+        <div className="item4">
+          <p style={{ textAlign: "center", textDecoration: "strong" }}>
+            <b>{this.state.selectedUser}</b>
+          </p>
+        </div>
+        <div className="item3">
+          <Input
+            placeholder="Some words..."
+            value={this.state.messageVal}
+            onChange={event => this.handleChange(event, "message")}
+          />
+        </div>
+        <div className="item2">
+          <Button type="primary" onClick={event => this.handleSendClick(event)}>
+            Send
+          </Button>
+          <Button
+            type="primary"
+            onClick={event => this.handleDisconnectClick(event)}
+          >
+            Disconnect
+          </Button>
+        </div>
       </div>
     );
     return this.state.logged ? chat : login;
