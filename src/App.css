@@ -30,22 +30,35 @@
     transform: rotate(360deg);
   }
 }
-
-.input {
-  width: 200px;
-  margin: 0 8px 8px 0
+.item1 {
+  grid-area: chatlist;
+}
+.item2 {
+  grid-area: sendButton;
+}
+.item3 {
+  grid-area: input;
+}
+.item4 {
+  grid-area: chat;
 }
 
-.right-button-style {
-  float: right;
-}
-
-.left-button-style {
-  float: left;
-}
-
-.box {
+.grid-container {
   display: grid;
-  grid-template-columns: 200px 200px 200px;
+  grid-template-areas:
+    "chatlist chat chat chat chat"
+    "chatlist chat chat chat chat"
+    "chatlist chat chat chat chat"
+    "chatlist input input input sendButton";
+  grid-template-rows: 1fr 150px 1fr;
+  grid-template-columns: 200px 1fr;
+  grid-gap: 10px;
+  background-color: #2196f3;
   padding: 10px;
+  width: 700px;
+}
+
+.grid-container > div {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 20px 0;
 }
