@@ -10,6 +10,19 @@ export default class App extends Component {
   }
 }
 
+function ChatList(selectedUser, messages) {
+  let currentMessageViewItems = [];
+  messages.map(item => {
+    if (
+      selectedUser.local === item.from.local ||
+      selectedUser.local === item.to.local
+    ) {
+      currentMessageViewItems.push(item);
+    }
+  });
+  return currentMessageViewItems;
+}
+
 class Chat extends Component {
   constructor(props) {
     super(props);
@@ -17,8 +30,11 @@ class Chat extends Component {
       unameVal: "",
       passVal: "",
       messageVal: "",
-      logged: false,
       selectedUser: "",
+      logged: false,
+      messages: [],
+      listedMessages: [],
+      availableMessages: [],
       roster: [
         {
           jid: "",
@@ -77,6 +93,7 @@ class Chat extends Component {
     this.client.on("session:started", () => {
       this.client.getRoster((err, res) => {
         if (res) {
+          //for status
           let roster = [];
           for (let i = 0; i < res.roster.items.length; i++) {
             roster.push({
@@ -88,6 +105,7 @@ class Chat extends Component {
             roster: roster
           });
           roster = [];
+          //for status
         }
         if (err) {
           console.log(err);
@@ -102,17 +120,61 @@ class Chat extends Component {
       console.log("disconnected");
     });
     this.client.on("message", message => {
-      console.log(message.from.local);
+      this.setState(prev => ({
+        messages: [
+          ...prev.messages,
+          {
+            to: "",
+            from: message.from.local,
+            body: message.body,
+            date: Date.now(),
+            sender: false
+          }
+        ]
+      }));
     });
-
     this.client.connect();
   }
   handleSendClick(event) {
     event.preventDefault();
-    this.client.sendMessage({
-      to: this.state.selectedUser + "@example.com",
-      body: this.state.messageVal
-    });
+    if (this.state.selectedUser !== "") {
+      this.client.sendMessage({
+        to: this.state.selectedUser + "@example.com",
+        body: this.state.messageVal
+      });
+
+      const selectedUser = this.state.selectedUser;
+      const listedMessages = ChatList(selectedUser, this.state.messages);
+      const receivedPromiseData = new Promise((resolve, reject) => {
+        resolve("res");
+        reject("rej");
+      });
+      receivedPromiseData
+        .then(() => {
+          this.setState(prev => ({
+            messages: [
+              ...prev.messages,
+              {
+                from: "",
+                to: this.state.selectedUser,
+                body: this.state.messageVal,
+                date: Date.now(),
+                sender: true
+              }
+            ]
+          }));
+          console.log(this.state.listedMessages);
+        })
+        .then(() => {
+          this.setState({
+            listedMessages: listedMessages,
+            selectedUser: selectedUser
+          });
+        });
+      receivedPromiseData.catch(err => {
+        console.log(err);
+      });
+    }
   }
 
   handleDisconnectClick(event) {
@@ -144,12 +206,27 @@ class Chat extends Component {
       default:
     }
   }
+
   handleSelectUserClick(event) {
     event.preventDefault();
-    this.setState({
-      selectedUser: event.target.value
+    const selectedUser = event.target.value;
+    const listedMessages = ChatList(selectedUser, this.state.messages);
+    const log_ = new Promise((resolve, reject) => {
+      resolve("res");
+      reject("rej");
+    });
+    log_.then(() => {
+      this.setState({
+        listedMessages: listedMessages,
+        selectedUser: selectedUser
+      });
+      console.log(this.state.listedMessages);
+    });
+    log_.catch(err => {
+      console.log(err);
     });
   }
+
   render() {
     const inputStyle = {
       width: "200px",
@@ -198,6 +275,11 @@ class Chat extends Component {
 
     const chat = (
       <div className="grid-container">
+        <div className="item4">
+          <p style={{ textAlign: "center", textDecoration: "strong" }}>
+            <b>{this.state.selectedUser}</b>
+          </p>
+        </div>
         <div className="item1">
           <ul>
             {this.state.roster.map(item => {
@@ -215,11 +297,7 @@ class Chat extends Component {
             })}
           </ul>
         </div>
-        <div className="item4">
-          <p style={{ textAlign: "center", textDecoration: "strong" }}>
-            <b>{this.state.selectedUser}</b>
-          </p>
-        </div>
+
         <div className="item3">
           <Input
             placeholder="Some words..."
