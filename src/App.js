@@ -17,7 +17,7 @@ function ChatList(selectedUser, messages) {
       selectedUser.local === item.from.local ||
       selectedUser.local === item.to.local
     ) {
-      currentMessageViewItems.push(item);
+      currentMessageViewItems = [...currentMessageViewItems, item];
     }
   });
   return currentMessageViewItems;
@@ -96,10 +96,13 @@ class Chat extends Component {
           //for status
           let roster = [];
           for (let i = 0; i < res.roster.items.length; i++) {
-            roster.push({
-              jid: res.roster.items[i].jid.local,
-              status: false
-            });
+            roster = [
+              ...roster,
+              {
+                jid: res.roster.items[i].jid.local,
+                status: false
+              }
+            ];
           }
           this.setState({
             roster: roster
@@ -137,17 +140,18 @@ class Chat extends Component {
   }
   handleSendClick(event) {
     event.preventDefault();
+
+    const selectedUser = event.target.value;
+    const listedMessages = ChatList(selectedUser, this.state.messages);
+    const receivedPromiseData = new Promise((resolve, reject) => {
+      resolve("res");
+      reject("rej");
+    });
+
     if (this.state.selectedUser !== "") {
       this.client.sendMessage({
         to: this.state.selectedUser + "@example.com",
         body: this.state.messageVal
-      });
-
-      const selectedUser = this.state.selectedUser;
-      const listedMessages = ChatList(selectedUser, this.state.messages);
-      const receivedPromiseData = new Promise((resolve, reject) => {
-        resolve("res");
-        reject("rej");
       });
       receivedPromiseData
         .then(() => {
@@ -163,13 +167,18 @@ class Chat extends Component {
               }
             ]
           }));
-          console.log(this.state.listedMessages);
         })
         .then(() => {
           this.setState({
-            listedMessages: listedMessages,
-            selectedUser: selectedUser
+            listedMessages: ChatList(
+              this.state.selectedUser,
+              this.state.messages
+            )
           });
+        })
+        .then(() => {
+          console.log("Gönderildi");
+          console.table(this.state.listedMessages);
         });
       receivedPromiseData.catch(err => {
         console.log(err);
@@ -211,18 +220,18 @@ class Chat extends Component {
     event.preventDefault();
     const selectedUser = event.target.value;
     const listedMessages = ChatList(selectedUser, this.state.messages);
-    const log_ = new Promise((resolve, reject) => {
+    const receivedPromiseData = new Promise((resolve, reject) => {
       resolve("res");
       reject("rej");
     });
-    log_.then(() => {
+    receivedPromiseData.then(() => {
       this.setState({
         listedMessages: listedMessages,
         selectedUser: selectedUser
       });
-      console.log(this.state.listedMessages);
+      console.table(this.state.listedMessages);
     });
-    log_.catch(err => {
+    receivedPromiseData.catch(err => {
       console.log(err);
     });
   }
@@ -297,7 +306,6 @@ class Chat extends Component {
             })}
           </ul>
         </div>
-
         <div className="item3">
           <Input
             placeholder="Some words..."
