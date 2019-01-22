@@ -5,11 +5,13 @@
   "dependencies": {
     "antd": "^3.11.2",
     "express": "^4.16.4",
+    "glamor": "^2.20.40",
     "mysql": "^2.16.0",
     "react": "^16.7.0",
     "react-chat-elements": "https://github.com/Detaysoft/react-chat-elements.git",
     "react-dom": "^16.7.0",
     "react-scripts": "^2.1.3",
+    "react-scroll-to-bottom": "^1.2.0",
     "stanza.io": "^9.2.0"
   },
   "scripts": {

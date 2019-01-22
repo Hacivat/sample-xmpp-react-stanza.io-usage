@@ -3,6 +3,8 @@ import "./App.css";
 import XMPP from "stanza.io";
 import { Input, Button } from "antd";
 import "antd/dist/antd.css";
+import ScrollToBottom from "react-scroll-to-bottom";
+import { css } from "glamor";
 
 export default class App extends Component {
   render() {
@@ -13,12 +15,9 @@ export default class App extends Component {
 function ChatList(selectedUser, messages) {
   let currentMessageViewItems = [];
   messages.map(item => {
-    if (
-      selectedUser.local === item.from.local ||
-      selectedUser.local === item.to.local
-    ) {
+    if (selectedUser === item.from || selectedUser === item.to) {
       currentMessageViewItems = [...currentMessageViewItems, item];
-    }
+    } else return null;
   });
   return currentMessageViewItems;
 }
@@ -55,6 +54,7 @@ class Chat extends Component {
   componentWillMount() {
     window.addEventListener("beforeunload", this.unload);
   }
+
   unload(event) {
     if (this.state.logged) {
       this.client.disconnect();
@@ -135,14 +135,15 @@ class Chat extends Component {
           }
         ]
       }));
+      this.setState({
+        listedMessages: ChatList(this.state.selectedUser, this.state.messages)
+      });
     });
+
     this.client.connect();
   }
-  handleSendClick(event) {
-    event.preventDefault();
 
-    const selectedUser = event.target.value;
-    const listedMessages = ChatList(selectedUser, this.state.messages);
+  handleSendClick() {
     const receivedPromiseData = new Promise((resolve, reject) => {
       resolve("res");
       reject("rej");
@@ -256,6 +257,11 @@ class Chat extends Component {
       margin: "auto"
     };
 
+    const messageView = css({
+      height: 200,
+      width: 400
+    });
+
     const login = (
       <div style={boxStyle}>
         <Input
@@ -288,6 +294,42 @@ class Chat extends Component {
           <p style={{ textAlign: "center", textDecoration: "strong" }}>
             <b>{this.state.selectedUser}</b>
           </p>
+          <ScrollToBottom className={messageView}>
+            {this.state.selectedUser
+              ? this.state.listedMessages.map(item => {
+                  if (item.from === "") {
+                    return (
+                      <div key={item.date}>
+                        <p
+                          style={{
+                            textAlign: "right",
+                            marginRight: "20px"
+                          }}
+                        >
+                          Siz;
+                        </p>
+                        <p style={{ textAlign: "right" }}>{item.body}</p>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div key={item.date}>
+                        <p
+                          style={{
+                            textAlign: "right",
+                            textDecoration: "strong",
+                            marginRight: "20px"
+                          }}
+                        >
+                          {item.from};
+                        </p>
+                        <p style={{ textAlign: "right" }}>{item.body}</p>
+                      </div>
+                    );
+                  }
+                })
+              : ""}
+          </ScrollToBottom>
         </div>
         <div className="item1">
           <ul>
