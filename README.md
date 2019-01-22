@@ -7,9 +7,9 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ### Recommended Openfire system properties
 
-`xmpp.auth.anonymous = false`
-`xmpp.httpbind.client.requests.max = 150`
-`xmpp.session.conflict-limit = 0`
+`xmpp.auth.anonymous = false` <br>
+`xmpp.httpbind.client.requests.max = 150` <br>
+`xmpp.session.conflict-limit = 0` <br>
 `xmpp.socket.ssl.active = true`
 
 ## Available Scripts
