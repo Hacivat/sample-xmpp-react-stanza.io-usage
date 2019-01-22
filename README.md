@@ -1,5 +1,17 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Requirements
+
+- Openfire (or different XMPP server)
+- MySQL
+
+### Recommended Openfire system properties
+
+`xmpp.auth.anonymous = false`
+`xmpp.httpbind.client.requests.max = 150`
+`xmpp.session.conflict-limit = 0`
+`xmpp.socket.ssl.active = true`
+
 ## Available Scripts
 
 In the project directory, you can run:
