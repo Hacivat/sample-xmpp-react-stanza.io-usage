@@ -176,11 +176,11 @@ class Chat extends Component {
               this.state.messages
             )
           });
-        })
-        .then(() => {
-          console.log("Gönderildi");
-          console.table(this.state.listedMessages);
         });
+      // .then(() => {
+      //   console.log("Gönderildi");
+      //   console.table(this.state.listedMessages);
+      // });
       receivedPromiseData.catch(err => {
         console.log(err);
       });
@@ -230,7 +230,7 @@ class Chat extends Component {
         listedMessages: listedMessages,
         selectedUser: selectedUser
       });
-      console.table(this.state.listedMessages);
+      // console.table(this.state.listedMessages);
     });
     receivedPromiseData.catch(err => {
       console.log(err);
@@ -299,29 +299,27 @@ class Chat extends Component {
               ? this.state.listedMessages.map(item => {
                   if (item.from === "") {
                     return (
-                      <div key={item.date}>
+                      <div key={item.date} style={{ marginRight: "20px" }}>
                         <p
                           style={{
-                            textAlign: "right",
-                            marginRight: "20px"
+                            textAlign: "right"
                           }}
                         >
-                          Siz;
+                          <b>Siz; </b>
                         </p>
                         <p style={{ textAlign: "right" }}>{item.body}</p>
                       </div>
                     );
                   } else {
                     return (
-                      <div key={item.date}>
+                      <div key={item.date} style={{ marginRight: "20px" }}>
                         <p
                           style={{
                             textAlign: "right",
-                            textDecoration: "strong",
-                            marginRight: "20px"
+                            textDecoration: "strong"
                           }}
                         >
-                          {item.from};
+                          <b>{item.from}; </b>
                         </p>
                         <p style={{ textAlign: "right" }}>{item.body}</p>
                       </div>
