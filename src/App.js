@@ -330,7 +330,10 @@ class Chat extends Component {
           </ScrollToBottom>
         </div>
         <div className="item1">
-          <ul>
+          <p style={{ textAlign: "center", textDecoration: "strong" }}>
+            <b>{this.state.unameVal}</b>
+          </p>
+          <ul style={{ listStyleType: "none" }}>
             {this.state.roster.map(item => {
               return (
                 <li key={item.jid}>
@@ -341,6 +344,8 @@ class Chat extends Component {
                   >
                     {item.jid}
                   </Button>
+                  <br />
+                  <br />
                 </li>
               );
             })}
