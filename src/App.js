@@ -1,10 +1,11 @@
 import React, { Component } from "react";
 import "./App.css";
-import XMPP from "stanza.io";
+import Client from "./global/client";
 import { Input, Button } from "antd";
 import "antd/dist/antd.css";
 import ScrollToBottom from "react-scroll-to-bottom";
 import { css } from "glamor";
+import Login from "./components/login";
 
 export default class App extends Component {
   render() {
@@ -12,7 +13,7 @@ export default class App extends Component {
   }
 }
 
-function ChatList(selectedUser, messages) {
+function ChatItems(selectedUser, messages) {
   let currentMessageViewItems = [];
   messages.map(item => {
     if (selectedUser === item.from || selectedUser === item.to) {
@@ -57,25 +58,18 @@ class Chat extends Component {
 
   unload(event) {
     if (this.state.logged) {
-      this.client.disconnect();
+      Client.client.disconnect();
       this.setState({
         logged: false
       });
     }
   }
 
-  handleLoginClick(event) {
-    event.preventDefault();
-    this.client = XMPP.createClient({
-      jid: this.state.unameVal + "@example.com",
-      password: this.state.passVal,
-      transport: "bosh",
-      boshURL: "http://127.0.0.1:7070/http-bind",
-      sasl: "plain",
-      resource: "web"
+  handleLoginClick(value) {
+    this.setState({
+      unameVal: value
     });
-
-    this.client.on("presence", presence => {
+    Client.client.on("presence", presence => {
       let currentRoster = this.state.roster;
       const precenceFromJID = presence.from.local;
       const precenceFromType = presence.type;
@@ -90,8 +84,8 @@ class Chat extends Component {
       });
     });
 
-    this.client.on("session:started", () => {
-      this.client.getRoster((err, res) => {
+    Client.client.on("session:started", () => {
+      Client.client.getRoster((err, res) => {
         if (res) {
           //for status
           let roster = [];
@@ -113,16 +107,17 @@ class Chat extends Component {
         if (err) {
           console.log(err);
         }
-        this.client.sendPresence();
+        Client.client.sendPresence();
         this.setState({
           logged: true
         });
       });
     });
-    this.client.on("disconnected", () => {
+
+    Client.client.on("disconnected", () => {
       console.log("disconnected");
     });
-    this.client.on("message", message => {
+    Client.client.on("message", message => {
       this.setState(prev => ({
         messages: [
           ...prev.messages,
@@ -136,11 +131,9 @@ class Chat extends Component {
         ]
       }));
       this.setState({
-        listedMessages: ChatList(this.state.selectedUser, this.state.messages)
+        listedMessages: ChatItems(this.state.selectedUser, this.state.messages)
       });
     });
-
-    this.client.connect();
   }
 
   handleSendClick() {
@@ -150,7 +143,7 @@ class Chat extends Component {
     });
 
     if (this.state.selectedUser !== "") {
-      this.client.sendMessage({
+      Client.client.sendMessage({
         to: this.state.selectedUser + "@example.com",
         body: this.state.messageVal
       });
@@ -171,16 +164,12 @@ class Chat extends Component {
         })
         .then(() => {
           this.setState({
-            listedMessages: ChatList(
+            listedMessages: ChatItems(
               this.state.selectedUser,
               this.state.messages
             )
           });
         });
-      // .then(() => {
-      //   console.log("Gönderildi");
-      //   console.table(this.state.listedMessages);
-      // });
       receivedPromiseData.catch(err => {
         console.log(err);
       });
@@ -189,7 +178,7 @@ class Chat extends Component {
 
   handleDisconnectClick(event) {
     event.preventDefault();
-    this.client.disconnect();
+    Client.client.disconnect();
     this.setState({
       logged: false,
       roster: []
@@ -198,16 +187,6 @@ class Chat extends Component {
 
   handleChange(param, type) {
     switch (type) {
-      case "uname":
-        this.setState({
-          unameVal: param.target.value
-        });
-        break;
-      case "pass":
-        this.setState({
-          passVal: param.target.value
-        });
-        break;
       case "message":
         this.setState({
           messageVal: param.target.value
@@ -220,7 +199,7 @@ class Chat extends Component {
   handleSelectUserClick(event) {
     event.preventDefault();
     const selectedUser = event.target.value;
-    const listedMessages = ChatList(selectedUser, this.state.messages);
+    const listedMessages = ChatItems(selectedUser, this.state.messages);
     const receivedPromiseData = new Promise((resolve, reject) => {
       resolve("res");
       reject("rej");
@@ -230,7 +209,6 @@ class Chat extends Component {
         listedMessages: listedMessages,
         selectedUser: selectedUser
       });
-      // console.table(this.state.listedMessages);
     });
     receivedPromiseData.catch(err => {
       console.log(err);
@@ -238,56 +216,10 @@ class Chat extends Component {
   }
 
   render() {
-    const inputStyle = {
-      width: "200px",
-      margin: "0 8px 8px 0",
-      float: "right"
-    };
-    const rightButtonStyle = {
-      float: "right"
-    };
-    const boxStyle = {
-      width: "200px",
-      height: "200px",
-      position: "absolute",
-      top: "0",
-      bottom: "0",
-      left: "0",
-      right: "0",
-      margin: "auto"
-    };
-
     const messageView = css({
       height: 200,
       width: 400
     });
-
-    const login = (
-      <div style={boxStyle}>
-        <Input
-          style={inputStyle}
-          placeholder="Nickname..."
-          value={this.state.unameVal}
-          onChange={event => this.handleChange(event, "uname")}
-        />
-        <br />
-        <Input
-          style={inputStyle}
-          placeholder="Password..."
-          value={this.state.passVal}
-          onChange={event => this.handleChange(event, "pass")}
-        />
-        <br />
-        <Button
-          type="primary"
-          style={rightButtonStyle}
-          onClick={event => this.handleLoginClick(event)}
-        >
-          Login
-        </Button>
-      </div>
-    );
-
     const chat = (
       <div className="grid-container">
         <div className="item4">
@@ -371,6 +303,10 @@ class Chat extends Component {
         </div>
       </div>
     );
-    return this.state.logged ? chat : login;
+    return this.state.logged ? (
+      chat
+    ) : (
+      <Login onChange={value => this.handleLoginClick(value)} />
+    );
   }
 }
