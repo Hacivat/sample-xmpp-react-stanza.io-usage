@@ -18,7 +18,7 @@ function ChatItems(selectedUser, messages) {
   messages.map(item => {
     if (selectedUser === item.from || selectedUser === item.to) {
       currentMessageViewItems = [...currentMessageViewItems, item];
-    } else return null;
+    }
   });
   return currentMessageViewItems;
 }
@@ -113,26 +113,30 @@ class Chat extends Component {
         });
       });
     });
-
     Client.client.on("disconnected", () => {
       console.log("disconnected");
     });
     Client.client.on("message", message => {
-      this.setState(prev => ({
-        messages: [
-          ...prev.messages,
-          {
-            to: "",
-            from: message.from.local,
-            body: message.body,
-            date: Date.now(),
-            sender: false
-          }
-        ]
-      }));
-      this.setState({
-        listedMessages: ChatItems(this.state.selectedUser, this.state.messages)
-      });
+      if (!message.hasOwnProperty("receipt")) {
+        this.setState(prev => ({
+          messages: [
+            ...prev.messages,
+            {
+              to: "",
+              from: message.from.local,
+              body: message.body,
+              date: Date.now(),
+              sender: false,
+            }
+          ]
+        }));
+      }
+      else {
+        this.setState({
+          listedMessages: ChatItems(this.state.selectedUser, this.state.messages, true)
+        });
+        console.log("iletildi")
+      }
     });
   }
 
@@ -145,7 +149,8 @@ class Chat extends Component {
     if (this.state.selectedUser !== "") {
       Client.client.sendMessage({
         to: this.state.selectedUser + "@example.com",
-        body: this.state.messageVal
+        body: this.state.messageVal,
+        requestReceipt: true
       });
       receivedPromiseData
         .then(() => {
@@ -229,35 +234,35 @@ class Chat extends Component {
           <ScrollToBottom className={messageView}>
             {this.state.selectedUser
               ? this.state.listedMessages.map(item => {
-                  if (item.from === "") {
-                    return (
-                      <div key={item.date} style={{ marginRight: "20px" }}>
-                        <p
-                          style={{
-                            textAlign: "right"
-                          }}
-                        >
-                          <b>Siz; </b>
-                        </p>
-                        <p style={{ textAlign: "right" }}>{item.body}</p>
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div key={item.date} style={{ marginRight: "20px" }}>
-                        <p
-                          style={{
-                            textAlign: "right",
-                            textDecoration: "strong"
-                          }}
-                        >
-                          <b>{item.from}; </b>
-                        </p>
-                        <p style={{ textAlign: "right" }}>{item.body}</p>
-                      </div>
-                    );
-                  }
-                })
+                if (item.from === "") {
+                  return (
+                    <div key={item.date} style={{ marginRight: "20px" }}>
+                      <p
+                        style={{
+                          textAlign: "right"
+                        }}
+                      >
+                        <b>Siz; </b>
+                      </p>
+                      <p style={{ textAlign: "right" }}>{item.body}</p>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={item.date} style={{ marginRight: "20px" }}>
+                      <p
+                        style={{
+                          textAlign: "right",
+                          textDecoration: "strong"
+                        }}
+                      >
+                        <b>{item.from}; </b>
+                      </p>
+                      <p style={{ textAlign: "right" }}>{item.body}</p>
+                    </div>
+                  );
+                }
+              })
               : ""}
           </ScrollToBottom>
         </div>
@@ -306,7 +311,7 @@ class Chat extends Component {
     return this.state.logged ? (
       chat
     ) : (
-      <Login onChange={value => this.handleLoginClick(value)} />
-    );
+        <Login onChange={value => this.handleLoginClick(value)} />
+      );
   }
 }
