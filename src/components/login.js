@@ -35,7 +35,6 @@ export default class Login extends Component {
   handleLoginClick() {
     Client.ConnectionToXMPP(this.state.unameVal, this.state.passVal);
     Client.client.connect();
-    console.log("clicked");
     this.props.onChange(this.state.unameVal);
   }
 

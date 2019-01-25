@@ -6,6 +6,7 @@ import "antd/dist/antd.css";
 import ScrollToBottom from "react-scroll-to-bottom";
 import { css } from "glamor";
 import Login from "./components/login";
+import Board from "./components/board";
 
 export default class App extends Component {
   render() {
@@ -69,7 +70,9 @@ class Chat extends Component {
     this.setState({
       unameVal: value
     });
+
     Client.client.on("presence", presence => {
+      console.log("app presence")
       let currentRoster = this.state.roster;
       const precenceFromJID = presence.from.local;
       const precenceFromType = presence.type;
@@ -85,6 +88,7 @@ class Chat extends Component {
     });
 
     Client.client.on("session:started", () => {
+      console.log("app session started")
       Client.client.getRoster((err, res) => {
         if (res) {
           //for status
@@ -114,10 +118,8 @@ class Chat extends Component {
       });
     });
 
-    Client.client.on("disconnected", () => {
-      console.log("disconnected");
-    });
     Client.client.on("message", message => {
+      console.log("app message")
       this.setState(prev => ({
         messages: [
           ...prev.messages,
@@ -141,7 +143,7 @@ class Chat extends Component {
       resolve("res");
       reject("rej");
     });
-
+    console.log("app handle send")
     if (this.state.selectedUser !== "") {
       Client.client.sendMessage({
         to: this.state.selectedUser + "@example.com",
@@ -215,6 +217,42 @@ class Chat extends Component {
     });
   }
 
+  handleChildEvent(value) {
+    switch (value) {
+      case "disconnected":
+        Client.client.on("disconnected", () => {
+          console.log("disconnected");
+          this.setState({
+            logged: false,
+            roster: []
+          });
+        });
+        break;
+      case "sent":
+        Client.client.on("message", message => {
+          console.log(value + " " + "active");
+          this.setState(prev => ({
+            messages: [
+              ...prev.messages,
+              {
+                to: "",
+                from: message.from.local,
+                body: message.body,
+                date: Date.now(),
+                sender: false
+              }
+            ]
+          }));
+          this.setState({
+            listedMessages: ChatItems(
+              this.state.selectedUser,
+              this.state.messages
+            )
+          });
+        });
+      default:
+    }
+  }
   render() {
     const messageView = css({
       height: 200,
@@ -229,35 +267,35 @@ class Chat extends Component {
           <ScrollToBottom className={messageView}>
             {this.state.selectedUser
               ? this.state.listedMessages.map(item => {
-                  if (item.from === "") {
-                    return (
-                      <div key={item.date} style={{ marginRight: "20px" }}>
-                        <p
-                          style={{
-                            textAlign: "right"
-                          }}
-                        >
-                          <b>Siz; </b>
-                        </p>
-                        <p style={{ textAlign: "right" }}>{item.body}</p>
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div key={item.date} style={{ marginRight: "20px" }}>
-                        <p
-                          style={{
-                            textAlign: "right",
-                            textDecoration: "strong"
-                          }}
-                        >
-                          <b>{item.from}; </b>
-                        </p>
-                        <p style={{ textAlign: "right" }}>{item.body}</p>
-                      </div>
-                    );
-                  }
-                })
+                if (item.from === "") {
+                  return (
+                    <div key={item.date} style={{ marginRight: "20px" }}>
+                      <p
+                        style={{
+                          textAlign: "right"
+                        }}
+                      >
+                        <b>Siz; </b>
+                      </p>
+                      <p style={{ textAlign: "right" }}>{item.body}</p>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={item.date} style={{ marginRight: "20px" }}>
+                      <p
+                        style={{
+                          textAlign: "right",
+                          textDecoration: "strong"
+                        }}
+                      >
+                        <b>{item.from}; </b>
+                      </p>
+                      <p style={{ textAlign: "right" }}>{item.body}</p>
+                    </div>
+                  );
+                }
+              })
               : ""}
           </ScrollToBottom>
         </div>
@@ -304,9 +342,14 @@ class Chat extends Component {
       </div>
     );
     return this.state.logged ? (
-      chat
+      <Board
+        selectedUser={this.state.selectedUser}
+        roster={this.state.roster}
+        messages={this.state.messages}
+        onChange={value => this.handleChildEvent(value)}
+      />
     ) : (
-      <Login onChange={value => this.handleLoginClick(value)} />
-    );
+        <Login onChange={value => this.handleLoginClick(value)} />
+      );
   }
 }

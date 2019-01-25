@@ -4,5 +4,6 @@
   // Enable per-language
   "[javascript]": {
     "editor.formatOnSave": true
-  }
+  },
+  "zenMode.hideTabs": false
 }
