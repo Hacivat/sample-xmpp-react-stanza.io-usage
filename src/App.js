@@ -6,23 +6,13 @@ import "antd/dist/antd.css";
 import ScrollToBottom from "react-scroll-to-bottom";
 import { css } from "glamor";
 import Login from "./components/login";
+import Manipulator from "./global/manipulators";
 
 export default class App extends Component {
   render() {
     return <Chat />;
   }
 }
-
-function ChatItems(selectedUser, messages) {
-  let currentMessageViewItems = [];
-  messages.map(item => {
-    if (selectedUser === item.from || selectedUser === item.to) {
-      currentMessageViewItems = [...currentMessageViewItems, item];
-    }
-  });
-  return currentMessageViewItems;
-}
-
 class Chat extends Component {
   constructor(props) {
     super(props);
@@ -40,7 +30,7 @@ class Chat extends Component {
           jid: "",
           status: false
         }
-      ]
+      ],
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleLoginClick = this.handleLoginClick.bind(this);
@@ -56,7 +46,7 @@ class Chat extends Component {
     window.addEventListener("beforeunload", this.unload);
   }
 
-  unload(event) {
+  unload() {
     if (this.state.logged) {
       Client.client.disconnect();
       this.setState({
@@ -69,6 +59,12 @@ class Chat extends Component {
     this.setState({
       unameVal: value
     });
+
+    Client.client.on('message:sent', message => {
+      Manipulator.addReceiptToListedMessage(this, message);
+      console.log(message);
+    })
+
     Client.client.on("presence", presence => {
       let currentRoster = this.state.roster;
       const precenceFromJID = presence.from.local;
@@ -116,67 +112,18 @@ class Chat extends Component {
     Client.client.on("disconnected", () => {
       console.log("disconnected");
     });
+
     Client.client.on("message", message => {
-      if (!message.hasOwnProperty("receipt")) {
-        this.setState(prev => ({
-          messages: [
-            ...prev.messages,
-            {
-              to: "",
-              from: message.from.local,
-              body: message.body,
-              date: Date.now(),
-              sender: false,
-            }
-          ]
-        }));
-      }
-      else {
-        this.setState({
-          listedMessages: ChatItems(this.state.selectedUser, this.state.messages, true)
-        });
-        console.log("iletildi")
-      }
+      Manipulator.messageParser(this, message);
     });
   }
 
   handleSendClick() {
-    const receivedPromiseData = new Promise((resolve, reject) => {
-      resolve("res");
-      reject("rej");
-    });
-
     if (this.state.selectedUser !== "") {
       Client.client.sendMessage({
         to: this.state.selectedUser + "@example.com",
         body: this.state.messageVal,
         requestReceipt: true
-      });
-      receivedPromiseData
-        .then(() => {
-          this.setState(prev => ({
-            messages: [
-              ...prev.messages,
-              {
-                from: "",
-                to: this.state.selectedUser,
-                body: this.state.messageVal,
-                date: Date.now(),
-                sender: true
-              }
-            ]
-          }));
-        })
-        .then(() => {
-          this.setState({
-            listedMessages: ChatItems(
-              this.state.selectedUser,
-              this.state.messages
-            )
-          });
-        });
-      receivedPromiseData.catch(err => {
-        console.log(err);
       });
     }
   }
@@ -204,7 +151,7 @@ class Chat extends Component {
   handleSelectUserClick(event) {
     event.preventDefault();
     const selectedUser = event.target.value;
-    const listedMessages = ChatItems(selectedUser, this.state.messages);
+    const listedMessages = Manipulator.chatItems(selectedUser, this.state.messages);
     const receivedPromiseData = new Promise((resolve, reject) => {
       resolve("res");
       reject("rej");
@@ -245,6 +192,8 @@ class Chat extends Component {
                         <b>Siz; </b>
                       </p>
                       <p style={{ textAlign: "right" }}>{item.body}</p>
+                      <p style={{ textAlign: "right" }}>{item.sent ? "İletildi" : ""}</p>
+
                     </div>
                   );
                 } else {
