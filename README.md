@@ -5,7 +5,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 ## Requirements
 
 - Openfire (or different XMPP server)
-- MySQL
+- MySQL (for openfire)
 
 ### Recommended Openfire system properties
 
